@@ -20,7 +20,7 @@ $pusher.sinker(
         emit Cro::ZeroMQ::Message.new: "second";
         emit Cro::ZeroMQ::Message.new: "third"
     }
-);
+).tap;
 
 await Promise.anyof($complete, Promise.in(1));
 
