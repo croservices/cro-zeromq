@@ -9,9 +9,9 @@ my $receiver = Cro::ZeroMQ::Pull.new(bind => 'tcp://127.0.0.1:2910');
 my %h = :!first, :!second, :!third;
 my $complete = Promise.new;
 
-$receiver.incoming.tap: -> $_ {
+my $tap = $receiver.incoming.tap: -> $_ {
     %h{$_.body-text} = True;
-    $complete.keep if so %h<first>&%h<second>&%h<third>;
+    {$complete.keep; $tap.close} if so %h<first>&%h<second>&%h<third>;
 }
 
 $pusher.sinker(
