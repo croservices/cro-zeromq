@@ -31,10 +31,10 @@ role Cro::ZeroMQ::Source does Cro::Source does Cro::ZeroMQ::Component {
     method !initial() {
         my Net::ZMQ4::Context $ctx .= new();
         my Net::ZMQ4::Socket  $socket .= new($ctx, self!type);
-        $socket;
+        ($socket, $ctx);
     }
 
-    method !source-supply($socket) {
+    method !source-supply($socket, $ctx) {
         supply {
             my $closer = False;
             my $messages = Supplier.new;
@@ -43,14 +43,12 @@ role Cro::ZeroMQ::Source does Cro::Source does Cro::ZeroMQ::Component {
                     last if $closer;
                     $messages.emit: Cro::ZeroMQ::Message.new(parts => $socket.receivemore);
                 }
-                CATCH {
-                    note $_
-                }
             }
             whenever $messages { emit $_ }
             CLOSE {
                 $closer = True;
                 $socket.close;
+                $ctx.term;
             }
         }
     }
