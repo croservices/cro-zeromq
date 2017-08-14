@@ -16,20 +16,6 @@ class Cro::ZeroMQ::Socket::Rep does Cro::ZeroMQ::Source does Cro::Replyable {
     }
 
     method replier(--> Cro::Replier) {
-        my class ReplyHandler does Cro::Sink {
-            has $!socket;
-
-            submethod BUILD(:$!socket!) {}
-
-            method consumes() { Cro::ZeroMQ::Message }
-            method sinker(Supply:D $messages --> Supply:D) {
-                supply {
-                    whenever $messages -> Cro::ZeroMQ::Message $_ {
-                        $!socket.sendmore(|@(.parts));
-                    }
-                }
-            }
-        }
         ReplyHandler.new(socket => $!socket);
     }
 }

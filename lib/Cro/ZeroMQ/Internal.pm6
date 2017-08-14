@@ -4,6 +4,21 @@ use Cro;
 use Net::ZMQ4::Constants;
 use Net::ZMQ4;
 
+class ReplyHandler does Cro::Sink {
+    has $!socket;
+
+    submethod BUILD(:$!socket!) {}
+
+    method consumes() { Cro::ZeroMQ::Message }
+    method sinker(Supply:D $messages --> Supply:D) {
+        supply {
+            whenever $messages -> Cro::ZeroMQ::Message $_ {
+                $!socket.sendmore(|@(.parts));
+            }
+        }
+    }
+}
+
 role Cro::ZeroMQ::Sink does Cro::Sink does Cro::ZeroMQ::Component {
     method consumes() { Cro::ZeroMQ::Message }
     method !type() { ... }
