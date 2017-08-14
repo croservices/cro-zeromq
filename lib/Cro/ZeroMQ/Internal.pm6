@@ -6,6 +6,7 @@ use Net::ZMQ4;
 
 class ReplyHandler does Cro::Sink {
     has $!socket;
+    has $!ctx;
 
     submethod BUILD(:$!socket!) {}
 
@@ -14,6 +15,10 @@ class ReplyHandler does Cro::Sink {
         supply {
             whenever $messages -> Cro::ZeroMQ::Message $_ {
                 $!socket.sendmore(|@(.parts));
+            }
+            CLOSE {
+                $!socket.close;
+                $!ctx.term;
             }
         }
     }
