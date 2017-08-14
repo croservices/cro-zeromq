@@ -1,10 +1,10 @@
 use Cro::ZeroMQ::Message;
-use Cro::ZeroMQ::Pull;
-use Cro::ZeroMQ::Push;
+use Cro::ZeroMQ::Socket::Pull;
+use Cro::ZeroMQ::Socket::Push;
 use Test;
 
-my $pusher = Cro::ZeroMQ::Push.new(connect => 'tcp://127.0.0.1:2910', high-water-mark => 1000);
-my $receiver = Cro::ZeroMQ::Pull.new(bind => 'tcp://127.0.0.1:2910');
+my $pusher = Cro::ZeroMQ::Socket::Push.new(connect => 'tcp://127.0.0.1:2910', high-water-mark => 1000);
+my $receiver = Cro::ZeroMQ::Socket::Pull.new(bind => 'tcp://127.0.0.1:2910');
 
 my %h = :!first, :!second, :!third;
 my $complete = Promise.new;

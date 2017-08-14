@@ -4,7 +4,7 @@ use Cro::ZeroMQ::Component;
 use Net::ZMQ4;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Pub does Cro::Sink does Cro::ZeroMQ::Component {
+class Cro::ZeroMQ::Socket::Pub does Cro::Sink does Cro::ZeroMQ::Component {
     method consumes() { Cro::ZeroMQ::Message }
 
     method sinker(Supply:D $incoming) {

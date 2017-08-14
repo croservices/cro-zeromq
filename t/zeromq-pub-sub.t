@@ -1,13 +1,13 @@
 use Cro::ZeroMQ::Message;
-use Cro::ZeroMQ::Pub;
-use Cro::ZeroMQ::Sub;
+use Cro::ZeroMQ::Socket::Pub;
+use Cro::ZeroMQ::Socket::Sub;
 use Test;
 
 sub test($desc, @messages, $subscribe,
          %init, %finish,
          :$unsubscribe) {
-    my $pub = Cro::ZeroMQ::Pub.new(connect => 'tcp://127.0.0.1:2910');
-    my $sub = Cro::ZeroMQ::Sub.new(bind => 'tcp://127.0.0.1:2910', :$subscribe, :$unsubscribe);
+    my $pub = Cro::ZeroMQ::Socket::Pub.new(connect => 'tcp://127.0.0.1:2910');
+    my $sub = Cro::ZeroMQ::Socket::Sub.new(bind => 'tcp://127.0.0.1:2910', :$subscribe, :$unsubscribe);
 
     my $complete = Promise.new;
 

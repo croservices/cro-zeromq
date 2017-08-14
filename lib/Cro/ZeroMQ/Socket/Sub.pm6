@@ -4,7 +4,7 @@ use Cro::ZeroMQ::Message;
 use Net::ZMQ4;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Sub does Cro::Source does Cro::ZeroMQ::Component {
+class Cro::ZeroMQ::Socket::Sub does Cro::Source does Cro::ZeroMQ::Component {
     has $.subscribe;
     has $.unsubscribe;
 

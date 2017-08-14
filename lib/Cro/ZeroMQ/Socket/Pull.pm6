@@ -1,7 +1,7 @@
 use Cro::ZeroMQ::Internal;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Pull does Cro::ZeroMQ::Source {
+class Cro::ZeroMQ::Socket::Pull does Cro::ZeroMQ::Source {
     method !type() { ZMQ_PULL }
 
     method incoming() {
