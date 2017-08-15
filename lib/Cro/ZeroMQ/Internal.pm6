@@ -8,7 +8,7 @@ class ReplyHandler does Cro::Sink {
     has $!socket;
     has $!ctx;
 
-    submethod BUILD(:$!socket!) {}
+    submethod BUILD(:$!socket!, :$!ctx!) {}
 
     method consumes() { Cro::ZeroMQ::Message }
     method sinker(Supply:D $messages --> Supply:D) {

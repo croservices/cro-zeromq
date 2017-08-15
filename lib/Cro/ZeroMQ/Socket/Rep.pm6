@@ -8,15 +8,20 @@ class Cro::ZeroMQ::Socket::Rep does Cro::ZeroMQ::Source does Cro::Replyable {
 
     method !type() { ZMQ_REP }
 
-    method incoming() {
+    method !init() {
         ($!socket, $!ctx) = self!initial;
         $!socket.setopt(ZMQ_SNDHWM, $!high-water-mark) if $!high-water-mark;
         $!socket.connect($!connect) if $!connect;
         $!socket.bind($!bind) if $!bind;
+    }
+
+    method incoming() {
+        self!init unless $!socket;
         self!source-supply($!socket, $!ctx);
     }
 
     method replier(--> Cro::Replier) {
+        self!init unless $!socket;
         ReplyHandler.new(socket => $!socket, ctx => $!ctx);
     }
 }
