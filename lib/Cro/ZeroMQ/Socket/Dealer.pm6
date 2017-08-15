@@ -1,6 +1,9 @@
 use Cro::Connector;
 use Cro::Transform;
+use Cro::ZeroMQ::Message;
 use Net::ZMQ4::Constants;
+use Net::ZMQ4::Util;
+use Net::ZMQ4;
 
 class Cro::ZeroMQ::Socket::Dealer does Cro::Connector {
     class Transform does Cro::Transform {
@@ -11,13 +14,28 @@ class Cro::ZeroMQ::Socket::Dealer does Cro::Connector {
         method produces() { Cro::ZeroMQ::Message }
 
         method transformer(Supply $incoming --> Supply) {
+            my $closer = False;
             supply {
-                $incoming.tap: -> $_ {
-                    # XXX Figure out second value
-                    $!socket.sendmore('', '');
-                    emit $!socket.receivemore[1..*];
+                whenever $incoming {
+                    $!socket.sendmore(|@(.parts));
                 }
+                my $messages = Channel.new;
+                start {
+                    loop {
+                        last if $closer;
+                        my @res = $!socket.receivemore;
+                        $messages.send(Cro::ZeroMQ::Message.new(parts => @res));
+                        CATCH {
+                            when X::ZMQ {
+                                $closer = True;
+                                next;
+                            }
+                        }
+                    }
+                }
+                whenever $messages { .emit }
                 CLOSE {
+                    $closer = True;
                     $!socket.close;
                     $!ctx.term;
                 }
@@ -31,7 +49,7 @@ class Cro::ZeroMQ::Socket::Dealer does Cro::Connector {
 
     method connect(:$connect, :$bind, :$high-water-mark --> Promise) {
         my $ctx = Net::ZMQ4::Context.new();
-        my $socket = Net::ZMQ4::socket.new($ctx, ZMQ_DEALER);
+        my $socket = Net::ZMQ4::Socket.new($ctx, ZMQ_DEALER);
         $socket.connect($connect) if $connect;
         $socket.bind($bind) if $bind;
         Promise.start({ Transform.new(:$ctx, :$socket)} );
