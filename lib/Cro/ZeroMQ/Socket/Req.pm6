@@ -19,6 +19,9 @@ class Cro::ZeroMQ::Socket::Req does Cro::Connector does Cro::ZeroMQ::Component {
                     $!socket.sendmore(|@(.parts));
                     my @res = $!socket.receivemore;
                     emit Cro::ZeroMQ::Message.new(|@res);
+                }, done => {
+                    $!socket.close;
+                    $!ctx.term;
                 }
                 CLOSE {
                     $!socket.close;
