@@ -5,18 +5,18 @@ use Test;
 
 my $rep = Cro::ZeroMQ::Socket::Rep.new(bind => "tcp://127.0.0.1:5555");
 
-my $s = Supplier::Preserving.new;
+my $echo = Supplier::Preserving.new;
 
 $rep.incoming.tap: -> $_ {
-    $s.emit: $_
+    $echo.emit: $_
 }
 
-$rep.replier.sinker($s.Supply).tap;
+$rep.replier.sinker($echo.Supply).tap;
 
 my $req = Cro.compose(Cro::ZeroMQ::Socket::Req);
 
-my $s1 = Supplier::Preserving.new;
-my $responses = $req.establish($s1.Supply, connect => "tcp://127.0.0.1:5555");
+my $input = Supplier::Preserving.new;
+my $responses = $req.establish($input.Supply, connect => "tcp://127.0.0.1:5555");
 
 my %f = :!first, :!second, :!third;
 my $completion = Promise.new;
@@ -26,9 +26,9 @@ $responses.tap: -> $_ {
     $completion.keep if %f<first> && %f<second> && %f<third>;
 }
 
-$s1.emit(Cro::ZeroMQ::Message.new('first'));
-$s1.emit(Cro::ZeroMQ::Message.new('second'));
-$s1.emit(Cro::ZeroMQ::Message.new('third'));
+$input.emit(Cro::ZeroMQ::Message.new('first'));
+$input.emit(Cro::ZeroMQ::Message.new('second'));
+$input.emit(Cro::ZeroMQ::Message.new('third'));
 
 await Promise.anyof($completion, Promise.in(2));
 
