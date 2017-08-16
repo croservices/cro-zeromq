@@ -1,11 +1,9 @@
-use Cro::Connector;
 use Cro::Transform;
+use Cro::ZeroMQ::Internal;
 use Cro::ZeroMQ::Message;
-use Cro::ZeroMQ::Component;
-use Net::ZMQ4;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Socket::Req does Cro::Connector does Cro::ZeroMQ::Component {
+class Cro::ZeroMQ::Socket::Req does Cro::ZeroMQ::Connector {
     class Transform does Cro::Transform {
         has $.socket;
         has $.ctx;
@@ -15,30 +13,30 @@ class Cro::ZeroMQ::Socket::Req does Cro::Connector does Cro::ZeroMQ::Component {
 
         method transformer(Supply $incoming --> Supply) {
             supply {
-                $incoming.tap: -> $_ {
+                whenever $incoming {
                     $!socket.sendmore(|@(.parts));
                     my @res = $!socket.receivemore;
                     emit Cro::ZeroMQ::Message.new(|@res);
-                }, done => {
-                    $!socket.close;
-                    $!ctx.term;
+                    LAST {
+                        self!cleanup;
+                    }
+                    QUIT {
+                        self!cleanup;
+                    }
                 }
                 CLOSE {
-                    $!socket.close;
-                    $!ctx.term;
+                    self!cleanup;
                 }
             }
         }
+        method !cleanup() {
+            $!socket.close;
+            $!ctx.term;
+        }
     }
 
-    method consumes() { Cro::ZeroMQ::Message }
-    method produces() { Cro::ZeroMQ::Message }
-
-    method connect(:$connect, :$bind, :$high-water-mark --> Promise) {
-        my $ctx = Net::ZMQ4::Context.new();
-        my $socket = Net::ZMQ4::Socket.new($ctx, ZMQ_REQ);
-        $socket.connect($connect) if $connect;
-        $socket.bind($bind) if $bind;
+    method !type() { ZMQ_REQ }
+    method !promise($ctx, $socket) {
         Promise.start({ Transform.new(:$ctx, :$socket)} );
     }
 }

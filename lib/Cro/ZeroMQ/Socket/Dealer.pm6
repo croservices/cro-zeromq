@@ -1,11 +1,10 @@
 use Cro::Connector;
 use Cro::Transform;
+use Cro::ZeroMQ::Internal;
 use Cro::ZeroMQ::Message;
 use Net::ZMQ4::Constants;
-use Net::ZMQ4::Util;
-use Net::ZMQ4;
 
-class Cro::ZeroMQ::Socket::Dealer does Cro::Connector {
+class Cro::ZeroMQ::Socket::Dealer does Cro::ZeroMQ::Connector {
     class Transform does Cro::Transform {
         has $.socket;
         has $.ctx;
@@ -18,6 +17,12 @@ class Cro::ZeroMQ::Socket::Dealer does Cro::Connector {
             supply {
                 whenever $incoming {
                     $!socket.sendmore(|@(.parts));
+                    LAST {
+                        self!cleanup;
+                    }
+                    QUIT {
+                        self!cleanup;
+                    }
                 }
                 my $messages = Channel.new;
                 start {
@@ -25,33 +30,23 @@ class Cro::ZeroMQ::Socket::Dealer does Cro::Connector {
                         last if $closer;
                         my @res = $!socket.receivemore;
                         $messages.send(Cro::ZeroMQ::Message.new(parts => @res));
-                        CATCH {
-                            when X::ZMQ {
-                                $closer = True;
-                                next;
-                            }
-                        }
                     }
                 }
                 whenever $messages { .emit }
                 CLOSE {
                     $closer = True;
-                    $!socket.close;
-                    $!ctx.term;
+                    self!cleanup;
                 }
             }
         }
-
+        method !cleanup() {
+            $!socket.close;
+            $!ctx.term;
+        }
     }
 
-    method consumes() { Cro::ZeroMQ::Message }
-    method produces() { Cro::ZeroMQ::Message }
-
-    method connect(:$connect, :$bind, :$high-water-mark --> Promise) {
-        my $ctx = Net::ZMQ4::Context.new();
-        my $socket = Net::ZMQ4::Socket.new($ctx, ZMQ_DEALER);
-        $socket.connect($connect) if $connect;
-        $socket.bind($bind) if $bind;
+    method !type() { ZMQ_DEALER }
+    method !promise($ctx, $socket) {
         Promise.start({ Transform.new(:$ctx, :$socket)} );
     }
 }

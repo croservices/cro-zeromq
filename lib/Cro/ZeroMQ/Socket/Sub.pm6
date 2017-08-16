@@ -1,15 +1,12 @@
-use Cro::Source;
-use Cro::ZeroMQ::Component;
-use Cro::ZeroMQ::Message;
+use Cro::ZeroMQ::Internal;
 use Net::ZMQ4;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Socket::Sub does Cro::Source does Cro::ZeroMQ::Component {
+class Cro::ZeroMQ::Socket::Sub does Cro::ZeroMQ::Source {
     has $.subscribe;
     has $.unsubscribe;
 
-    method produces() { Cro::ZeroMQ::Message }
-
+    method !type() { ZMQ_SUB }
     method new(:$connect = Nil, :$bind = Nil,
                :$high-water-mark,
                :$subscribe = Nil, :$unsubscribe) {
@@ -19,29 +16,24 @@ class Cro::ZeroMQ::Socket::Sub does Cro::Source does Cro::ZeroMQ::Component {
     }
 
     method incoming(--> Supply:D) {
-        my Net::ZMQ4::Context $ctx .= new();
-        my Net::ZMQ4::Socket  $sub .= new($ctx, ZMQ_SUB);
-        $sub.setopt(ZMQ_SNDHWM, $!high-water-mark) if $!high-water-mark;
-        $sub.connect($!connect) if $!connect;
-        $sub.bind($!bind) if $!bind;
-
+        self!initial;
         given $!subscribe {
-            when Blob { $sub.setopt(ZMQ_SUBSCRIBE, $_) }
-            when Str  { $sub.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) }
+            when Blob { $!socket.setopt(ZMQ_SUBSCRIBE, $_) }
+            when Str  { $!socket.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) }
             when Iterable {
                 for @$_ {
                     $_ ~~ Blob ??
-                    $sub.setopt(ZMQ_SUBSCRIBE, $_) !!
+                    $!socket.setopt(ZMQ_SUBSCRIBE, $_) !!
                         $_ ~~ Str ??
-                        $sub.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) !!
+                        $!socket.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) !!
                         die "Envelope part must be a Str or a Blob, {$_.WHAT} passed";
                 }
             }
-            when Whatever { $sub.setopt(ZMQ_SUBSCRIBE, Blob.new) }
+            when Whatever { $!socket.setopt(ZMQ_SUBSCRIBE, Blob.new) }
             when Supply {
                 $_.tap: -> $_ {
                     die "Envelope part must be a Str or a Blob, {$_.WHAT} passed" if $_ !~~ Blob|Str;
-                    $sub.setopt(
+                    $!socket.setopt(
                         ZMQ_SUBSCRIBE,
                         $_ ~~ Blob ?? $_ !! Blob.new: $_.encode
                     )
@@ -52,25 +44,10 @@ class Cro::ZeroMQ::Socket::Sub does Cro::Source does Cro::ZeroMQ::Component {
         if $!unsubscribe {
             $!unsubscribe.tap: -> $_ {
                 my $topic = $_ ~~ Blob ?? $_ !! $_.encode;
-                $sub.setopt(ZMQ_UNSUBSCRIBE, $topic);
+                $!socket.setopt(ZMQ_UNSUBSCRIBE, $topic);
             }
         }
 
-        supply {
-            my $closer = False;
-            my $messages = Supplier.new;
-            start {
-                loop {
-                    last if $closer;
-                    $messages.emit: Cro::ZeroMQ::Message.new(parts => $sub.receivemore[1..*]);
-                }
-            }
-            whenever $messages { emit $_ }
-            CLOSE {
-                $closer = True;
-                $sub.close;
-                $ctx.term;
-            }
-        }
+        self!source-supply;
     }
 }
