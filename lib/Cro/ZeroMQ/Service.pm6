@@ -29,11 +29,11 @@ class Cro::ZeroMQ::Service does Cro::Service {
             service-type => self.WHAT,
             Cro::ZeroMQ::Socket::Pull.new(bind => $pull-bind,
                                           connect => $pull-connect,
-                                          high-water-mark => :$pull-high-water-mark),
+                                          high-water-mark => $pull-high-water-mark),
             |@components,
             Cro::ZeroMQ::Socket::Push.new(bind => $push-bind,
                                           connect => $push-connect,
-                                          high-water-mark => :$push-high-water-mark)
+                                          high-water-mark => $push-high-water-mark)
         );
     }
 
