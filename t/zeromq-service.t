@@ -7,6 +7,7 @@ my Cro::Service $service = Cro::ZeroMQ::Service.rep(
     bind => 'tcp://127.0.0.1:5555'
 );
 
+# REQ
 $service.start;
 
 my $req = Cro.compose(Cro::ZeroMQ::Socket::Req);
@@ -27,10 +28,11 @@ if $completion.status == Kept {
 }
 
 $service.stop;
-
 $completion = Promise.new;
 
-class Aggregator does Cro::Sink {
+# PULL
+
+class PullAggregator does Cro::Sink {
     method consumes() { Cro::ZeroMQ::Message }
     method sinker(Supply $messages --> Supply) {
         supply {
@@ -43,7 +45,7 @@ class Aggregator does Cro::Sink {
 
 $service = Cro::ZeroMQ::Service.pull(
     bind => 'tcp://127.0.0.1:5556',
-    Aggregator
+    PullAggregator
 );
 
 $service.start;
@@ -62,5 +64,7 @@ if $completion.status == Kept {
 } else {
     flunk "PULL service works";
 }
+
+$service.stop;
 
 done-testing;
