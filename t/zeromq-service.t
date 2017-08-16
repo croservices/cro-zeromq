@@ -21,11 +21,7 @@ $input.emit(Cro::ZeroMQ::Message.new('test'));
 
 await Promise.anyof($completion, Promise.in(2));
 
-if $completion.status == Kept {
-    pass "REP service works";
-} else {
-    flunk "REP service works";
-}
+is $completion.status, Kept, "REP service works";
 
 $service.stop;
 $completion = Promise.new;
@@ -59,11 +55,7 @@ $pusher.sinker(
 
 await Promise.anyof($completion, Promise.in(2));
 
-if $completion.status == Kept {
-    pass "PULL service works";
-} else {
-    flunk "PULL service works";
-}
+is $completion.status, Kept, "PULL service works";
 
 $service.stop;
 

@@ -32,10 +32,6 @@ $input.emit(Cro::ZeroMQ::Message.new('third'));
 
 await Promise.anyof($completion, Promise.in(2));
 
-if $completion.status == Kept {
-    pass "REQ/REP pair is working";
-} else {
-    flunk "REQ/REP pair is working";
-}
+is $completion.status, Kept, "REQ/REP pair is working";
 
 done-testing;

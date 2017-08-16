@@ -33,10 +33,6 @@ $input.emit(Cro::ZeroMQ::Message.new('', 'third'));
 
 await Promise.anyof($completion, Promise.in(2));
 
-if $completion.status == Kept {
-    pass "ROUTER/DEALER pair is working";
-} else {
-    flunk "ROUTER/DEALER pair is working";
-}
+is $completion.status, Kept, "ROUTER/DEALER pair is working";
 
 done-testing;
