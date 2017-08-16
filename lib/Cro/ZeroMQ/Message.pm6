@@ -13,8 +13,15 @@ class Cro::ZeroMQ::Message does Cro::Message {
     multi method new(*@rest) {
         my @res;
         for @rest {
-            die "Message part can be only Blob or Str, encountered $_.WHAT" if $_ !~~ Blob|Str;
-            @res.push: $_ ~~ Str ?? Buf.new($_.encode) !! $_;
+            when Blob {
+                @res.push: $_;
+            }
+            when Str {
+                @res.push: Buf.new($_.encode)
+            }
+            default {
+                die "Message part can be only Blob or Str, encountered $_.^name()";
+            }
         }
         return self.bless(parts => @res);
     }
