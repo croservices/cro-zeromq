@@ -2,7 +2,7 @@ use Cro::ZeroMQ::Component;
 use Cro::ZeroMQ::Message;
 use Cro;
 use Net::ZMQ4::Constants;
-use Net::ZMQ4;
+use Net::ZMQ4::Poll;
 
 role Cro::ZeroMQ::Replyable does Cro::Replyable {
     my class ReplyHandler does Cro::Sink {
@@ -105,7 +105,10 @@ role Cro::ZeroMQ::Source::Impure does Cro::Source does Cro::ZeroMQ::Component::I
             start {
                 loop {
                     last if $closer;
-                    $messages.emit: Cro::ZeroMQ::Message.new(parts => self!socket.receivemore);
+                    my $event = poll_one(self!socket, 100, :in);
+                    if $event > 0 {
+                        $messages.emit: Cro::ZeroMQ::Message.new(parts => self!socket.receivemore);
+                    }
                 }
             }
             whenever $messages { emit $_ }
@@ -130,7 +133,10 @@ role Cro::ZeroMQ::Source::Pure does Cro::Source does Cro::ZeroMQ::Component::Pur
             start {
                 loop {
                     last if $closer;
-                    $messages.emit: Cro::ZeroMQ::Message.new(parts => $isocket.receivemore);
+                    my $event = poll_one($isocket, 100, :in);
+                    if $event > 0 {
+                        $messages.emit: Cro::ZeroMQ::Message.new(parts => $isocket.receivemore);
+                    }
                 }
             }
             whenever $messages { emit $_ }

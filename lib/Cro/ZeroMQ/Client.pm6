@@ -21,7 +21,7 @@ class Cro::ZeroMQ::Client::Dealer does Cro::ZeroMQ::Client::Common {
                 $_.keep(Cro::ZeroMQ::Message.new($resp.parts[1..*]));
             }
             else {
-                die "Strange response is get: {$resp.parts}";
+                die "Strange response is get: {$resp.parts.perl}";
             }
         }
     }
