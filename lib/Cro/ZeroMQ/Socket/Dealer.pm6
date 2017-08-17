@@ -3,6 +3,7 @@ use Cro::Transform;
 use Cro::ZeroMQ::Internal;
 use Cro::ZeroMQ::Message;
 use Net::ZMQ4::Constants;
+use Net::ZMQ4::Poll;
 
 class Cro::ZeroMQ::Socket::Dealer does Cro::ZeroMQ::Connector {
     class Transform does Cro::Transform {
@@ -28,8 +29,10 @@ class Cro::ZeroMQ::Socket::Dealer does Cro::ZeroMQ::Connector {
                 start {
                     loop {
                         last if $closer;
-                        my @res = $!socket.receivemore;
-                        $messages.send(Cro::ZeroMQ::Message.new(parts => @res));
+                        my $event = poll_one($!socket, 100, :in);
+                        if $event > 0 {
+                            $messages.send: Cro::ZeroMQ::Message.new(parts => $!socket.receivemore);
+                        }
                     }
                 }
                 whenever $messages { .emit }
