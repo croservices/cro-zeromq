@@ -11,10 +11,9 @@ class Cro::ZeroMQ::Socket::XPub does Cro::ZeroMQ::Source::Impure does Cro::ZeroM
             start {
                 loop {
                     last if $closer;
-                    with self!socket.receivemore {
-                        if .parts[0][0] == 0 {
-                            $messages.emit: Cro::ZeroMQ::Message.new(|@(.parts))
-                        }
+                    my $msg = self!socket.receivemore;
+                    if $msg[0][0] == 1 {
+                        $messages.emit: Cro::ZeroMQ::Message.new(|@($msg))
                     }
                 }
             }

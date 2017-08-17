@@ -15,32 +15,23 @@ $pubSock.replier.sinker($pubSockSupplier.Supply).tap;
 $subSock.replier.sinker($subSockSupplier.Supply).tap;
 
 $subSock.incoming.tap: -> $_ {
-    say "subSock incoming";
-    .say;
     $pubSockSupplier.emit($_);
 }
 
 $pubSock.incoming.tap: -> $_ {
-    say "pubSock incoming";
-    .say;
-    $subSockSupplier.emit($_.parts[1..*]);
+    $subSockSupplier.emit(Cro::ZeroMQ::Message.new: parts => .parts);
 }
 
 my $p = Promise.new;
 
 my $pub = Cro::ZeroMQ::Socket::Pub.new(connect => 'tcp://127.0.0.1:5556');
-my $sub = Cro::ZeroMQ::Socket::Sub.new(connect => 'tcp://127.0.0.1:5555', subscribe => 'MYCHANNEL');
+my $sub = Cro::ZeroMQ::Socket::Sub.new(connect => 'tcp://127.0.0.1:5555', subscribe => 'a');
 
-$sub.incoming.tap: -> $_ {
-    say "In sock incoming";
-    .say;
-    $p.keep;
-}
+$sub.incoming.tap: -> $_ { $p.keep; }
 
 $pub.sinker(
     supply {
-        say "In supply";
-        emit Cro::ZeroMQ::Message.new('MYCHANNEL', 'here is the info');
+        emit Cro::ZeroMQ::Message.new('a', 'test');
     }
 ).tap;
 
