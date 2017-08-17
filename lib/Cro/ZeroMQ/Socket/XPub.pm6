@@ -1,14 +1,8 @@
 use Cro::ZeroMQ::Internal;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Socket::XPub does Cro::ZeroMQ::Source does Cro::ZeroMQ::Replyable {
+class Cro::ZeroMQ::Socket::XPub does Cro::ZeroMQ::Source::Impure does Cro::ZeroMQ::Replyable {
     method !type() { ZMQ_XPUB }
-
-    # method incoming() {
-    #     self!initial;
-    #     self!socket.sockopt(ZMQ_XPUB_VERBOSE, 0);
-    #     self!source-supply;
-    # }
 
     method !source-supply() {
         supply {

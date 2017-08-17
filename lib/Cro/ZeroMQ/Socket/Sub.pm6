@@ -2,7 +2,7 @@ use Cro::ZeroMQ::Internal;
 use Net::ZMQ4;
 use Net::ZMQ4::Constants;
 
-class Cro::ZeroMQ::Socket::Sub does Cro::ZeroMQ::Source {
+class Cro::ZeroMQ::Socket::Sub does Cro::ZeroMQ::Source::Pure {
     has $.subscribe;
     has $.unsubscribe;
 
@@ -16,24 +16,24 @@ class Cro::ZeroMQ::Socket::Sub does Cro::ZeroMQ::Source {
     }
 
     method incoming(--> Supply:D) {
-        self!initial;
+        my ($ctx, $socket) = self!initial;
         given $!subscribe {
-            when Blob { $!socket.setopt(ZMQ_SUBSCRIBE, $_) }
-            when Str  { $!socket.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) }
+            when Blob { $socket.setopt(ZMQ_SUBSCRIBE, $_) }
+            when Str  { $socket.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) }
             when Iterable {
                 for @$_ {
                     $_ ~~ Blob ??
-                    $!socket.setopt(ZMQ_SUBSCRIBE, $_) !!
+                    $socket.setopt(ZMQ_SUBSCRIBE, $_) !!
                         $_ ~~ Str ??
-                        $!socket.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) !!
+                        $socket.setopt(ZMQ_SUBSCRIBE, Blob.new: $_.encode) !!
                         die "Envelope part must be a Str or a Blob, {$_.WHAT} passed";
                 }
             }
-            when Whatever { $!socket.setopt(ZMQ_SUBSCRIBE, Blob.new) }
+            when Whatever { $socket.setopt(ZMQ_SUBSCRIBE, Blob.new) }
             when Supply {
                 $_.tap: -> $_ {
                     die "Envelope part must be a Str or a Blob, {$_.WHAT} passed" if $_ !~~ Blob|Str;
-                    $!socket.setopt(
+                    $socket.setopt(
                         ZMQ_SUBSCRIBE,
                         $_ ~~ Blob ?? $_ !! Blob.new: $_.encode
                     )
@@ -44,10 +44,10 @@ class Cro::ZeroMQ::Socket::Sub does Cro::ZeroMQ::Source {
         if $!unsubscribe {
             $!unsubscribe.tap: -> $_ {
                 my $topic = $_ ~~ Blob ?? $_ !! $_.encode;
-                $!socket.setopt(ZMQ_UNSUBSCRIBE, $topic);
+                $socket.setopt(ZMQ_UNSUBSCRIBE, $topic);
             }
         }
 
-        self!source-supply;
+        self!source-supply(:$ctx, :$socket);
     }
 }

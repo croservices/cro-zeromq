@@ -56,14 +56,14 @@ class Cro::ZeroMQ::Client {
     # This is a duplication, but we won't win anything by generalization of it
     method req(:$connect) {
         my $req = Cro.compose(Cro::ZeroMQ::Socket::Req);
-        my $input = Supplier.new;
+        my $input = Supplier::Preserving.new;
         my $output = $req.establish($input.Supply, :$connect);
         Cro::ZeroMQ::Client::Req.new(:$input, :$output);
     }
 
     method dealer(:$connect) {
         my $dealer = Cro.compose(Cro::ZeroMQ::Socket::Dealer);
-        my $input = Supplier.new;
+        my $input = Supplier::Preserving.new;
         my $output = $dealer.establish($input.Supply, :$connect);
         Cro::ZeroMQ::Client::Dealer.new(:$input, :$output);
     }

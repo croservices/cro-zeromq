@@ -61,7 +61,6 @@ my $completion = Promise.new;
 for <a b c>.pick(*).list {
     start {
         my $reply = await $client.send(Cro::ZeroMQ::Message.new($_));
-        say $reply.body-text;
         %h{$reply.body-text} = True;
         $completion.keep if %h<a> && %h<b> && %h<c>;
     }
