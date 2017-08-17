@@ -13,6 +13,14 @@ class Cro::ZeroMQ::Service does Cro::Service {
             |@components)
     }
 
+    method router(:$connect, :$bind, :$high-water-mark,
+                  *@components) {
+        Cro.compose(
+            service-type => self.WHAT,
+            Cro::ZeroMQ::Socket::Router.new(:$connect, :$bind, :$high-water-mark),
+            |@components);
+    }
+
     method pull(:$connect, :$bind, :$high-water-mark,
                 *@components) {
         Cro.compose(
