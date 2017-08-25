@@ -29,7 +29,7 @@ class Cro::ZeroMQ::Service does Cro::Service {
             |@components);
     }
 
-    method push-pull(:$pull-bind, :$pull-connect,
+    method pull-push(:$pull-bind, :$pull-connect,
                      :$push-bind, :$push-connect,
                      :$push-high-water-mark, :$pull-high-water-mark,
                      *@components) {
