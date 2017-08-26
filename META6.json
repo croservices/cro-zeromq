@@ -5,7 +5,7 @@
     "description"   : "Libraries for building reactive services in Perl 6 - ZeroMQ part.",
     "authors"       : [ "Jonathan Worthington <jnthn@jnthn.net>" ],
     "license"       : "Artistic-2.0",
-    "depends"       : [ "Net::ZMQ" ],
+    "depends"       : [ "Net::ZMQ", "Cro::Core", "Cro" ],
     "provides"      : {
         "Cro::ZeroMQ::Client": "lib/Cro/ZeroMQ/Client.pm6",
         "Cro::ZeroMQ::Component": "lib/Cro/ZeroMQ/Component.pm6",
