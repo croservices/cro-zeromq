@@ -105,6 +105,7 @@ role Cro::ZeroMQ::Source::Impure does Cro::Source does Cro::ZeroMQ::Component::I
             start {
                 loop {
                     last if $closer;
+                    CATCH { default { .rethrow unless $closer } }
                     my $event = poll_one(self!socket, 100, :in);
                     if $event > 0 {
                         $messages.emit: Cro::ZeroMQ::Message.new(parts => self!socket.receivemore);
@@ -133,6 +134,7 @@ role Cro::ZeroMQ::Source::Pure does Cro::Source does Cro::ZeroMQ::Component::Pur
             start {
                 loop {
                     last if $closer;
+                    CATCH { default { .rethrow unless $closer } }
                     my $event = poll_one($isocket, 100, :in);
                     if $event > 0 {
                         $messages.emit: Cro::ZeroMQ::Message.new(parts => $isocket.receivemore);
