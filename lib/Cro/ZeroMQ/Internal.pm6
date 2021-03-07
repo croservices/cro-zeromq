@@ -102,15 +102,19 @@ role Cro::ZeroMQ::Source::Impure does Cro::Source does Cro::ZeroMQ::Component::I
             $!tapped = True;
             my $closer = False;
             my $messages = Supplier.new;
+            my $poller-ready = Promise.new;
             start {
+                $poller-ready.keep;
                 loop {
                     last if $closer;
+                    CATCH { default { .rethrow unless $closer } }
                     my $event = poll_one(self!socket, 100, :in);
                     if $event > 0 {
                         $messages.emit: Cro::ZeroMQ::Message.new(parts => self!socket.receivemore);
                     }
                 }
             }
+            await $poller-ready;
             whenever $messages { emit $_ }
             CLOSE {
                 $!tapped = False;
@@ -130,15 +134,19 @@ role Cro::ZeroMQ::Source::Pure does Cro::Source does Cro::ZeroMQ::Component::Pur
             my ($ictx, $isocket) = $socket ?? ($ctx, $socket) !! self!initial;
             my $closer = False;
             my $messages = Supplier.new;
+            my $poller-ready = Promise.new;
             start {
+                $poller-ready.keep;
                 loop {
                     last if $closer;
+                    CATCH { default { .rethrow unless $closer } }
                     my $event = poll_one($isocket, 100, :in);
                     if $event > 0 {
                         $messages.emit: Cro::ZeroMQ::Message.new(parts => $isocket.receivemore);
                     }
                 }
             }
+            await $poller-ready;
             whenever $messages { emit $_ }
             CLOSE {
                 $closer = True;
