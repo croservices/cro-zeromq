@@ -22,7 +22,9 @@
         "Cro::ZeroMQ::Socket::Rep": "lib/Cro/ZeroMQ/Socket/Rep.pm6",
         "Cro::ZeroMQ::Socket::Req": "lib/Cro/ZeroMQ/Socket/Req.pm6",
         "Cro::ZeroMQ::Socket::Router": "lib/Cro/ZeroMQ/Socket/Router.pm6",
-        "Cro::ZeroMQ::Socket::Sub": "lib/Cro/ZeroMQ/Socket/Sub.pm6"
+        "Cro::ZeroMQ::Socket::Sub": "lib/Cro/ZeroMQ/Socket/Sub.pm6",
+        "Cro::ZeroMQ::Socket::XPub": "lib/Cro/ZeroMQ/Socket/XPub.pm6",
+        "Cro::ZeroMQ::Socket::XSub": "lib/Cro/ZeroMQ/Socket/XSub.pm6"
     },
     "resources": [],
     "source-url"    : "https://github.com/croservices/cro-zeromq.git"
